@@ -1,0 +1,125 @@
+---
+title: "Exercise 5"
+author: "Alexandra Anderson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+packages_needed <- c("ggplot2", # graphics
+                     "plyr",
+                     "arm", # display() etc.
+                     "MASS",
+                     "dplyr",
+                     "ggfortify",
+                     "easystats"
+                     )
+pk_to_install <- packages_needed [!( packages_needed %in% rownames(installed.packages())  )]
+if(length(pk_to_install)>0 ){
+  install.packages(pk_to_install,repos="http://cran.r-project.org")
+}
+#lapply(packages_needed, require, character.only = TRUE)
+library(ggplot2)
+library(plyr)
+library(arm)
+library(MASS)
+library(dplyr)
+library(ggfortify)
+library(easystats)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+quolls<-read.csv("predator_prey_abundance.csv")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r Quoll and Competitor plot, echo=FALSE}
+ggplot(quolls, aes(northern.quoll, feral.cat)) + 
+  geom_point(size=3, pch = 21) +
+  geom_smooth(method="glm", method.args=list(family="poisson"(link="log"))) +
+  ylab("Number of Feral Cats") +
+  xlab("Number of Quolls in the Area") +
+  labs(caption = "Quolls and Competitor Abundance")
+```
+```{r poisson model}
+model_cat_poisson <- glm(northern.quoll ~ feral.cat, family = poisson, data=quolls)
+summary(model_cat_poisson)
+```
+```{r check the poisson model}
+autoplot(model_cat_poisson)
+```
+
+
+```{r quasi-Poisson model}
+model_cat_quasi <- glm(northern.quoll ~ feral.cat, family = quasipoisson, data = quolls)
+summary(model_cat_quasi)
+```
+
+```{r check the quasi-poisson model}
+autoplot(model_cat_quasi)
+```
+
+
+
+
+```{r Quoll and Prey Plot}
+ggplot(quolls, aes(total, northern.quoll)) + 
+  geom_point(size=3, pch = 21) +
+  geom_smooth(method="glm", method.args=list(family="poisson"(link="log"))) +
+  ylab("Number of Quolls") +
+  xlab("Number of Prey items") +
+  labs(caption = "Quolls and Prey Abundance")
+```
+
+```{r poisson model}
+model_diversity_poisson <- glm(total ~ northern.quoll, family = poisson, data=quolls)
+summary(model_diversity_poisson)
+```
+```{r check the poisson model}
+autoplot(model_diversity_poisson)
+```
+
+```{r quasi-Poisson model}
+model_diversity_quasi <- glm(total ~ northern.quoll, family = quasipoisson, data = quolls)
+summary(model_diversity_quasi)
+```
+```{r check the quasi-poisson model}
+autoplot(model_diversity_quasi)
+```
+
+```{r Specify the Poisson GLM}
+Treatment.pois <- glm(total~northern.quoll*Treatment, family= poisson(link=log), data= quolls)
+```
+
+```{r summary pois1}
+summary(Treatment.pois)
+```
+
+```{r box plot}
+ggplot(quolls, aes(Treatment, total)) +
+  geom_boxplot() +
+  geom_jitter(shape=1, size=3, height = 0, width = .15)
+```
+I was going to do a model coefficient plot, but I was not happy where it was visually and for me it was just as difficult to read as the standard summary. 
+```{r}
+qpois1 <- glm(total~northern.quoll*Treatment, quasipoisson, data= quolls)
+summary(qpois1)
+```
+```{r coef of qposi1}
+coef(qpois1)
+```
+
+```{r confit of qposi1}
+confint(qpois1)
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
